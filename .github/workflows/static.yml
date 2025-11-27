@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Build Job
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -25,19 +25,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # Use a current node version
+          node-version: 20 
 
       - name: Install dependencies
-        run: npm ci # or 'npm install'
+        run: npm install
 
       - name: Build
-        run: npm run build # This creates the 'dist' folder
+        run: npm run build 
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the 'dist' folder that the build command created
-          # If using Create React App, this might be 'build' instead of 'dist'
+          
           path: './dist' 
 
   # Deploy Job
