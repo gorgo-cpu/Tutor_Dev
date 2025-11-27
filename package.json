@@ -1,5 +1,5 @@
 {
-  "name": "threejs-journey-exercise",
+  "name": "threejs",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,6 +9,12 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
+  "scripts": {
+  "dev": "vite",
+  "build": "vite build",  <-- THIS LINE IS CRITICAL
+  "lint": "eslint .",
+  "preview": "vite preview"
+},
   "devDependencies": {
     "@vitejs/plugin-react": "4.3",
     "vite": "^6.2.2",
