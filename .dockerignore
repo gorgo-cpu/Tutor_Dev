@@ -1,0 +1,14 @@
+node_modules
+dist
+**/node_modules
+**/dist
+.dockerignore
+.git
+.gitignore
+README.md
+frontend/node_modules
+backend/node_modules
+frontend/dist
+frontend/.git
+backend/.git
+.env
