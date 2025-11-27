@@ -11,7 +11,7 @@
   },
   "scripts": {
   "dev": "vite",
-  "build": "vite build",  <-- THIS LINE IS CRITICAL
+  "build": "vite build",  
   "lint": "eslint .",
   "preview": "vite preview"
 },
