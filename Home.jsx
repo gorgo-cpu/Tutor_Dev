@@ -54,7 +54,7 @@ function SidebarButton({ label, onClick, index, onNavigate, target }) {
     }
 
     return (
-        <group position={[-2, yPos, 0]}>
+        <group position={[-1, yPos, 0]}>
             <Text
                 ref={textRef}
                 font='/jersey-15-v4-latin-regular.ttf'
@@ -80,7 +80,7 @@ function Sidebar({ onNavigate }) {
   //const xPosition = (-viewport.width / 2) + 2
 
     return (
-    <group position={[30, 8, 0]}>
+    <group position={[20, 8, 0]}>
         {MENU_ITEMS.map((item, index) => (
             <SidebarButton 
                 key={item.label}

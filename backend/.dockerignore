@@ -1,4 +1,6 @@
+bin
+obj
 node_modules
-npm-debug.log
+.git
+.gitignore
 .env
-coverage

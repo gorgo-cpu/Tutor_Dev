@@ -1,18 +1,45 @@
-Tutor_Dev
+# Tutor_Dev
 
+A tutoring portal demo with a React (Vite) frontend and Supabase (Auth + Postgres) backend. The homepage is a 3D scene built with React Three Fiber, while the dashboards are lightweight Tailwind UIs (Students / Parents / Teachers) with weekly calendar views (react-big-calendar).
 
-Implemented a containerized, secure web application with a React-Three-Fiber frontend and a Node.js/Express backend, optimized for modularity and operational scalability. The homepage uses a 3D scene built with react-three-fiber to create an engaging initial user experience, while the remaining portal pages are lightweight 2D UIs (Tailwind CSS) focused on task efficiency. I built the entire stack for production using Docker Compose and implemented enterprise-grade security and event-driven architecture to enable real-world workflows.
+## Architecture
+- **Frontend**: Vite + React SPA (3D Home + dashboards). Embedded email/password login + signup via Supabase Auth.
+- **Database**: Supabase Postgres with RLS policies and RPC functions for safe, atomic booking.
+- **Backend**: ASP.NET Core API for privileged/admin operations (role approval, seeding teacher availability). Uses the Supabase **service role key** server-side only.
 
-Key contributions and responsibilities
+## Setup
+1) **Create Supabase project** and copy your project URL + anon key.
+2) In Supabase SQL editor, run `supabase/schema.sql`.
+3) Configure auth confirmation policy in Supabase:
+   - **Dev**: disable email confirmation for faster iteration.
+   - **Prod**: enable email confirmation; the UI will show a “check your email” state on signup until the user verifies and signs in.
+4) Create a local `.env` based on `.env.example`.
+5) Install and run the frontend:
+   - `npm install`
+   - `npm run dev`
 
-Frontend: Architected a single-page app with a React + Vite build; built a 3D Home scene (react-three-fiber) and modular, accessible 2D portal pages (Tailwind CSS). Implemented Keycloak-based SSO via keycloak-js with a reusable provider and login components; integrated token usage for backend calls.
+## Roles and approval flow
+- Signup collects a **requested role** (`student`, `parent`, `teacher`). This is stored as `profiles.requested_role`.
+- `profiles.role` is **not client-writable**; it must be approved by an admin.
+- Until approved, the UI shows “Pending approval” instead of dashboards.
 
-Backend: Implemented a Node.js/Express API with secure token verification (Keycloak introspection) and role-based access control (realm roles for student/teacher/parent/admin). Maintained separate DBs for Students, Parents, and Teachers (dedicated PostgreSQL instances) for data isolation and compliance with domain boundaries.
+## Admin backend (optional but recommended)
+The .NET backend is used for admin actions and must be configured with:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-side only)
+- `ADMIN_API_KEY` (simple header check for dev)
 
-Security (Keycloak): Configured a Keycloak realm with public and confidential clients, service accounts, and realm roles. Implemented secure token introspection in the backend and client/session management in the frontend to enforce RBAC and protect endpoints.
+Examples (dev):
+- Approve role (uses `requested_role` when `role` is omitted):
+  - `POST http://localhost:4000/admin/approve-role` with header `X-Admin-Key: <ADMIN_API_KEY>` and JSON `{ "userId": "<uuid>" }`
+- Link parent to student:
+  - `POST http://localhost:4000/admin/link-parent-student` with JSON `{ "parentId": "<uuid>", "studentId": "<uuid>" }`
+- Seed teacher availability:
+  - `POST http://localhost:4000/admin/seed-availability` with JSON `{ "teacherId": "<uuid>" }`
 
-Messaging (RabbitMQ): Integrated RabbitMQ as the event bus for decoupling services. (e.g., student_created/teacher_created/parent_created) to enable asynchronous processing, future microservices, and extensible notifications or audit pipelines.
-
-Containerization & DevOps: Orchestrated Keycloak, RabbitMQ, multiple Postgres instances, backend, and production frontend via Docker Compose; added multi-stage Dockerfiles for production-grade builds, nginx static serving, persistent volumes, and environment-configured services.
-
-Reliability & Observability: Added DB migrations/tables, startup retry patterns, and standardized logs to make containerized services resilient for local/integration testing.
+## Booking
+Parents book sessions by calling the Postgres RPC function `book_slot(...)` via `supabase.rpc`.
+The function enforces:
+- parent/student linkage (`parent_students`)
+- atomic booking (locks availability row)
+- teacher + student conflict checks

@@ -1,113 +1,24 @@
-version: "3.8"
+#version: "3.8"
 
 services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:21.1.1
-    container_name: keycloak
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      # Ensure realm import from mounted file
-      KEYCLOAK_IMPORT: /opt/keycloak/data/import/realm.json
-    command:
-      - start-dev
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-
-  students-db:
-    image: postgres:15-alpine
-    container_name: students-db
-    environment:
-      POSTGRES_DB: students_db
-      POSTGRES_USER: students
-      POSTGRES_PASSWORD: students_password
-    ports:
-      - "5432:5432"
-    volumes:
-      - students-db-data:/var/lib/postgresql/data
-
-  parents-db:
-    image: postgres:15-alpine
-    container_name: parents-db
-    environment:
-      POSTGRES_DB: parents_db
-      POSTGRES_USER: parents
-      POSTGRES_PASSWORD: parents_password
-    ports:
-      - "5433:5432"
-    volumes:
-      - parents-db-data:/var/lib/postgresql/data
-
-  teachers-db:
-    image: postgres:15-alpine
-    container_name: teachers-db
-    environment:
-      POSTGRES_DB: teachers_db
-      POSTGRES_USER: teachers
-      POSTGRES_PASSWORD: teachers_password
-    ports:
-      - "5434:5432"
-    volumes:
-      - teachers-db-data:/var/lib/postgresql/data
-
   backend:
     build:
       context: ./backend
     container_name: tutor-backend
-    depends_on:
-      - students-db
-      - parents-db
-      - teachers-db
-      - rabbitmq
-      - keycloak
     environment:
-      PORT: 4000
-      STUDENTS_DB_HOST: students-db
-      STUDENTS_DB_PORT: 5432
-      STUDENTS_DB_NAME: students_db
-      STUDENTS_DB_USER: students
-      STUDENTS_DB_PASSWORD: students_password
-      PARENTS_DB_HOST: parents-db
-      PARENTS_DB_PORT: 5432
-      PARENTS_DB_NAME: parents_db
-      PARENTS_DB_USER: parents
-      PARENTS_DB_PASSWORD: parents_password
-      TEACHERS_DB_HOST: teachers-db
-      TEACHERS_DB_PORT: 5432
-      TEACHERS_DB_NAME: teachers_db
-      TEACHERS_DB_USER: teachers
-      TEACHERS_DB_PASSWORD: teachers_password
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-      KEYCLOAK_URL: http://keycloak:8080
-      KEYCLOAK_REALM: tutor
-      KEYCLOAK_CLIENT_ID: backend-service
-      KEYCLOAK_CLIENT_SECRET: verysecret
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      ADMIN_API_KEY: ${ADMIN_API_KEY}
     ports:
       - "4000:4000"
-    volumes:
-      - ./backend:/app
 
-  frontend:
+  frontend:     
     build:
       context: .
       dockerfile: ./frontend/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
     container_name: tutor-frontend
     depends_on:
       - backend
@@ -116,8 +27,3 @@ services:
       - "5173:80"
     environment:
       - NODE_ENV=production
-
-volumes:
-  students-db-data:
-  parents-db-data:
-  teachers-db-data:

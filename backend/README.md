@@ -1,51 +1,28 @@
-# Tutor Backend
+# Backend (.NET)
 
-A minimal backend scaffold for the TutoringDE project. It includes a small Express server and connects to separate Postgres databases for Students, Parents, and Teachers, and RabbitMQ for messaging. The server can optionally use Keycloak for token introspection authentication.
+Small ASP.NET Core API for privileged/admin operations. It uses the Supabase **service role key** server-side only.
 
-## Run locally using Docker Compose
+## Environment variables
+- `SUPABASE_URL` (e.g. `https://YOUR_PROJECT_REF.supabase.co`)
+- `SUPABASE_SERVICE_ROLE_KEY` (keep secret; never expose to the frontend)
+- `ADMIN_API_KEY` (simple dev-only admin auth)
 
+## Run (local)
 ```bash
-docker compose up --build
+dotnet run --project backend/TutorBackend.csproj
 ```
+API: http://localhost:4000
 
-Services created by the compose file:
-- Keycloak (http://localhost:8080)
-- RabbitMQ management (http://localhost:15672)
-- Students DB (Postgres, host: localhost:5432)
-- Parents DB (Postgres, host: localhost:5433)
-- Teachers DB (Postgres, host: localhost:5434)
-- Backend (http://localhost:4000)
- - Frontend (http://localhost:5173) — built and served by nginx from the `frontend` service
+## Endpoints
+- `GET /health`
 
-### Keycloak clients & test users
+Admin (requires header `X-Admin-Key: <ADMIN_API_KEY>`):
+- `POST /admin/approve-role` body: `{ "userId": "<uuid>", "role": "student|parent|teacher|admin" }`
+  - If `role` is omitted, it uses `profiles.requested_role`.
+- `POST /admin/seed-teachers` body:
+  - `{ "teachers": [{ "userId": "<uuid>", "displayName": "Ms. Rivera", "subjects": ["A1 Grammar"] }] }`
+- `POST /admin/seed-availability` body:
+  - `{ "teacherId": "<uuid>", "days": 5, "slotsPerDay": 2, "slotMinutes": 60 }`
+- `POST /admin/link-parent-student` body:
+  - `{ "parentId": "<uuid>", "studentId": "<uuid>" }`
 
-- Frontend client:
-	- clientId: `frontend` (public client)
-	- redirectUris: `http://localhost:5173/*`
-	- example use: front-end OIDC (login with Keycloak)
-
-- Backend client:
-	- clientId: `backend-service` (confidential client)
-	- secret: `verysecret` (used by backend for token introspection/service account)
-
-Test users (imported in the realm export):
-- `alice` / `password` → realm role: `student`
-- `bob` / `password` → realm role: `teacher`
-- `carol` / `password` → realm role: `parent`
-- `superadmin` / `admin` → realm role: `admin`
-
-## API Endpoints
-- GET /health
-- GET /students
-- POST /students
-- GET /teachers
-- POST /teachers
-- GET /parents
-- POST /parents
-
-All POST endpoints require a JSON body.
-
-## Notes
-- Replace default credentials in `docker-compose.yml` and `keycloak/realm-export.json` for production.
-- The Keycloak realm import is done by mounting realm-export.json; double-check the Keycloak image docs if import issues occur.
-- For production, consider using a single managed Postgres instance and separate schemas instead of several containers.

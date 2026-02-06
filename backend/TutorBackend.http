@@ -1,0 +1,6 @@
+@TutorBackend_HostAddress = http://localhost:4000
+
+GET {{TutorBackend_HostAddress}}/health
+Accept: application/json
+
+###
