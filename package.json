@@ -28,11 +28,11 @@
     "vite-plugin-restart": "^0.4.2"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
     "@react-three/drei": "^10.0.4",
     "@react-three/fiber": "^9.1.0",
     "@tailwindcss/vite": "^4.1.17",
     "date-fns": "^4.1.0",
-    "keycloak-js": "^21.1.1",
     "leva": "^0.10.1",
     "r3f-perf": "^7.2.3",
     "react": "19.0",
